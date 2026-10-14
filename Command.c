@@ -142,9 +142,11 @@ static void child(CommandRep r, int fg) {
 }
 
 extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
-			int *jobbed, int *eof, int fg) {
+			int *jobbed, int *eof, int fg, int input_fd,
+			int output_fd, int wait_for_child, pid_t *child_pid) {
   CommandRep r=command;
-  if (fg) {
+  if (fg && input_fd==STDIN_FILENO && output_fd==STDOUT_FILENO &&
+      wait_for_child) {
     int saved_stdin=dup(STDIN_FILENO);
     int saved_stdout=dup(STDOUT_FILENO);
     if (saved_stdin==-1 || saved_stdout==-1)
@@ -168,12 +170,18 @@ extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
   int pid=fork();
   if (pid==-1)
     ERROR("fork() failed");
+  if (child_pid)
+    *child_pid=pid;
   if (pid==0) {
+    if (input_fd!=STDIN_FILENO && dup2(input_fd,STDIN_FILENO)==-1)
+      ERROR("dup2() failed");
+    if (output_fd!=STDOUT_FILENO && dup2(output_fd,STDOUT_FILENO)==-1)
+      ERROR("dup2() failed");
+    if (input_fd!=STDIN_FILENO)
+      close(input_fd);
+    if (output_fd!=STDOUT_FILENO)
+      close(output_fd);
     child(r,fg);
-  } else if (fg) {
-    while (waitpid(pid,0,0)==-1)
-      if (errno != EINTR)
-        ERROR("waitpid() failed");
   }
 }
 

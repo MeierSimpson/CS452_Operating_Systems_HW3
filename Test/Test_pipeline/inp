@@ -1,0 +1,4 @@
+/bin/printf alpha\nbeta\n | /usr/bin/tr a-z A-Z
+/bin/cat < Test/Test_redirect/input.txt | /usr/bin/wc -l
+/bin/printf pipeline_output\n | /bin/cat > /tmp/hw3-pipeline-output
+/bin/cat < /tmp/hw3-pipeline-output
