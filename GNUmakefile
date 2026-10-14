@@ -1,28 +1,16 @@
-prog?=$(basename $(notdir $(PWD)))
-objs+=$(addsuffix .o,$(basename $(wildcard *.c *.cc)))
+prog=shell
 
-defines+=-D_GNU_SOURCE
-ccflags+=-g -Wall -MMD $(defines)
-ldflags+=-g
+ldflags:=-lreadline -lncurses
 
-.SUFFIXES:
+include ../GNUmakefile
 
-%.o: %.c  ; gcc -o $@ -c $< $(ccflags)
-%.i: %.c  ; gcc -o $@ -E $< $(defines)
-%.s: %.c  ; gcc -o $@ -S $< $(defines)
-%.o: %.cc ; g++ -o $@ -c $< $(ccflags)
-%.i: %.cc ; g++ -o $@ -E $< $(defines)
-%.s: %.cc ; g++ -o $@ -S $< $(defines)
+try: $(objs) libdeq.so
+	gcc -o $@ $(objs) $(ldflags) -L. -ldeq -Wl,-rpath=.
 
-ld?=gcc
+trytest: try
+	Test/run $<
 
-$(prog): $(objs) ; $(ld) -o $@ $^ $(ldflags)
+test: $(prog)
+	Test/run $<
 
-.PHONY: clean run valgrind
-
-clean:: ; rm -f $(prog) *.o *.d *.i try
-
-run:      $(prog) ; ./$< $(args)
-valgrind: $(prog) ; $@ --leak-check=full --show-leak-kinds=all ./$< $(args)
-
-sinclude *.d
+Parser.o:ccflags+=-Wno-unused-function
