@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
+#include <sys/wait.h>
 
 #include "Command.h"
 #include "error.h"
@@ -109,7 +111,7 @@ static void child(CommandRep r, int fg) {
     return;
   execvp(r->argv[0],r->argv);
   ERROR("execvp() failed");
-  exit(0);
+  _exit(EXIT_FAILURE);
 }
 
 extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
@@ -117,15 +119,20 @@ extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
   CommandRep r=command;
   if (fg && builtin(r,eof,jobs))
     return;
-  if (!*jobbed) {
+  if (!fg && !*jobbed) {
     *jobbed=1;
     addJobs(jobs,pipeline);
   }
   int pid=fork();
   if (pid==-1)
     ERROR("fork() failed");
-  if (pid==0)
+  if (pid==0) {
     child(r,fg);
+  } else if (fg) {
+    while (waitpid(pid,0,0)==-1)
+      if (errno != EINTR)
+        ERROR("waitpid() failed");
+  }
 }
 
 extern void freeCommand(Command command) {

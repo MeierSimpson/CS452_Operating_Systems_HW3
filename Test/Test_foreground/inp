@@ -1,0 +1,2 @@
+/bin/echo foreground command
+/bin/echo first ; /bin/echo second
