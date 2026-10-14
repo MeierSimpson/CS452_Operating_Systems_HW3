@@ -123,6 +123,7 @@ extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
     *jobbed=1;
     addJobs(jobs,pipeline);
   }
+  fflush(NULL);
   int pid=fork();
   if (pid==-1)
     ERROR("fork() failed");
