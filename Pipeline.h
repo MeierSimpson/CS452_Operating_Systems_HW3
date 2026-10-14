@@ -9,6 +9,7 @@ typedef void *Pipeline;
 extern Pipeline newPipeline(int fg);
 extern void addPipeline(Pipeline pipeline, Command command);
 extern int sizePipeline(Pipeline pipeline);
+extern int foregroundPipeline(Pipeline pipeline);
 extern void execPipeline(Pipeline pipeline, Jobs jobs, int *eof);
 extern void freePipeline(Pipeline pipeline);
 

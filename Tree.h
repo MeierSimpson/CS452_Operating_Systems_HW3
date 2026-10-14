@@ -20,6 +20,8 @@ struct T_pipeline {
 
 struct T_command {
   T_words words;
+  char *input;
+  char *output;
 };
 
 struct T_words {

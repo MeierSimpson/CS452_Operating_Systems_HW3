@@ -32,10 +32,15 @@ extern int sizePipeline(Pipeline pipeline) {
   return deq_len(r->processes);
 }
 
+extern int foregroundPipeline(Pipeline pipeline) {
+  PipelineRep r=(PipelineRep)pipeline;
+  return r->fg;
+}
+
 static void execute(Pipeline pipeline, Jobs jobs, int *jobbed, int *eof) {
   PipelineRep r=(PipelineRep)pipeline;
   for (int i=0; i<sizePipeline(r) && !*eof; i++)
-    execCommand(deq_head_ith(r->processes,i),pipeline,jobs,jobbed,eof,1);
+    execCommand(deq_head_ith(r->processes,i),pipeline,jobs,jobbed,eof,r->fg);
 }
 
 extern void execPipeline(Pipeline pipeline, Jobs jobs, int *eof) {

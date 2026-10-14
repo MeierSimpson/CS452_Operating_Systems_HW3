@@ -26,6 +26,7 @@ int main() {
   }
 
   while (!eof) {
+    reapJobs(jobs);
     char *line=readline(prompt);
     if (!line)
       break;
@@ -41,6 +42,7 @@ int main() {
   } else {
     fclose(rl_outstream);
   }
+  waitJobs(jobs);
   freestateCommand();
   freeJobs(jobs);
   return 0;

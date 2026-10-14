@@ -44,7 +44,10 @@ make try
 ./shell
 ```
 
-Enter commands such as `pwd`, `cd /tmp`, and `history`. Press `Ctrl-D` or use
+Enter commands such as `pwd`, `cd /tmp`, `history`, `sleep 5 &`, and
+`cat < input.txt > output.txt`. A command followed by `&` runs in the
+background; the shell continues reading commands and waits for remaining
+background commands before exiting. Press `Ctrl-D` or use
 the `exit` builtin to leave the shell. Interactive history is stored in
 `.history`.
 

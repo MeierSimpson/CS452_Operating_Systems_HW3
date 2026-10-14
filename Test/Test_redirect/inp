@@ -1,0 +1,5 @@
+/bin/cat < Test/Test_redirect/input.txt
+/bin/cat < Test/Test_redirect/input.txt > /tmp/hw3-redirection-output
+/bin/cat < /tmp/hw3-redirection-output
+cd /tmp ; pwd > /tmp/hw3-redirection-output
+/bin/cat < /tmp/hw3-redirection-output

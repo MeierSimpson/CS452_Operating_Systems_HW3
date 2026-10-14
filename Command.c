@@ -4,6 +4,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 #include "Command.h"
 #include "error.h"
@@ -11,6 +12,8 @@
 typedef struct {
   char *file;
   char **argv;
+  char *input;
+  char *output;
 } *CommandRep;
 
 #define BIARGS CommandRep r, int *eof, Jobs jobs
@@ -95,20 +98,44 @@ static char **getargs(T_words words) {
   return argv;
 }
 
-extern Command newCommand(T_words words) {
+extern Command newCommand(T_command command) {
   CommandRep r=(CommandRep)malloc(sizeof(*r));
   if (!r)
     ERROR("malloc() failed");
-  r->argv=getargs(words);
+  r->argv=getargs(command->words);
   r->file=r->argv[0];
+  r->input=command->input ? strdup(command->input) : 0;
+  r->output=command->output ? strdup(command->output) : 0;
   return r;
+}
+
+static void redirect(CommandRep r) {
+  if (r->input) {
+    int fd=open(r->input,O_RDONLY);
+    if (fd==-1)
+      ERROR("open() failed");
+    if (dup2(fd,STDIN_FILENO)==-1)
+      ERROR("dup2() failed");
+    close(fd);
+  }
+  if (r->output) {
+    int fd=open(r->output,O_WRONLY|O_CREAT|O_TRUNC,0666);
+    if (fd==-1)
+      ERROR("open() failed");
+    if (dup2(fd,STDOUT_FILENO)==-1)
+      ERROR("dup2() failed");
+    close(fd);
+  }
 }
 
 static void child(CommandRep r, int fg) {
   int eof=0;
   Jobs jobs=newJobs();
-  if (builtin(r,&eof,jobs))
-    return;
+  redirect(r);
+  if (builtin(r,&eof,jobs)) {
+    freeJobs(jobs);
+    _exit(EXIT_SUCCESS);
+  }
   execvp(r->argv[0],r->argv);
   ERROR("execvp() failed");
   _exit(EXIT_FAILURE);
@@ -117,8 +144,22 @@ static void child(CommandRep r, int fg) {
 extern void execCommand(Command command, Pipeline pipeline, Jobs jobs,
 			int *jobbed, int *eof, int fg) {
   CommandRep r=command;
-  if (fg && builtin(r,eof,jobs))
-    return;
+  if (fg) {
+    int saved_stdin=dup(STDIN_FILENO);
+    int saved_stdout=dup(STDOUT_FILENO);
+    if (saved_stdin==-1 || saved_stdout==-1)
+      ERROR("dup() failed");
+    redirect(r);
+    int is_builtin=builtin(r,eof,jobs);
+    fflush(NULL);
+    if (dup2(saved_stdin,STDIN_FILENO)==-1 ||
+        dup2(saved_stdout,STDOUT_FILENO)==-1)
+      ERROR("dup2() failed");
+    close(saved_stdin);
+    close(saved_stdout);
+    if (is_builtin)
+      return;
+  }
   if (!fg && !*jobbed) {
     *jobbed=1;
     addJobs(jobs,pipeline);
@@ -142,6 +183,8 @@ extern void freeCommand(Command command) {
   while (*argv)
     free(*argv++);
   free(r->argv);
+  free(r->input);
+  free(r->output);
   free(r);
 }
 
