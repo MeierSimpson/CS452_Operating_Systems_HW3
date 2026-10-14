@@ -43,6 +43,8 @@ static void execute(Pipeline pipeline, Jobs jobs, int *jobbed, int *eof) {
   int input_fd=STDIN_FILENO;
   int count=sizePipeline(r);
   pid_t pids[count];
+  for (int i=0; i<count; i++)
+    pids[i]=-1;
 
   for (int i=0; i<count && !*eof; i++) {
     int pipe_fds[2]={-1,-1};
@@ -62,8 +64,11 @@ static void execute(Pipeline pipeline, Jobs jobs, int *jobbed, int *eof) {
   if (input_fd!=STDIN_FILENO)
     close(input_fd);
   if (r->fg) {
-    for (int i=0; i<count; i++)
+    for (int i=0; i<count; i++) {
+      if (pids[i]==-1)
+        continue;
       while (waitpid(pids[i],0,0)==-1 && errno==EINTR);
+    }
   }
 }
 
