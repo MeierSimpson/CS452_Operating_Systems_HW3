@@ -1,0 +1,14 @@
+# Interactive shell history
+.history
+
+# Build products
+*.o
+*.d
+*.so
+shell
+try
+./Test/Test_pwd/out
+Test/Test_pwd/out
+
+# Regression-test output
+Test/**/out
