@@ -44,7 +44,7 @@ make try
 ./shell
 ```
 
-Enter commands such as `pwd`, `cd /tmp`, `history`, `sleep 5 &`, and
+Enter commands such as `pwd`, `cd /tmp`, `cd -`, `history`, `sleep 5 &`, and
 `cat < input.txt > output.txt`. Commands separated by `|` form a pipeline,
 such as `cat input.txt | wc -l`. A command followed by `&` runs in the
 background; the shell continues reading commands and waits for remaining

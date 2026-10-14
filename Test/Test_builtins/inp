@@ -1,0 +1,9 @@
+/bin/echo builtin-test
+history
+cd /tmp
+pwd
+cd /
+pwd
+cd -
+pwd
+exit

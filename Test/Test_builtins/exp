@@ -1,0 +1,6 @@
+builtin-test
+/bin/echo builtin-test
+history
+/tmp
+/
+/tmp

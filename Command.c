@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <readline/history.h>
 
 #include "Command.h"
 #include "error.h"
@@ -44,18 +45,34 @@ BIDEFN(pwd) {
 }
 
 BIDEFN(cd) {
+  char *current;
+  char *target;
+
   builtin_args(r,1);
-  if (strcmp(r->argv[1],"-")==0) {
-    char *twd=cwd;
-    cwd=owd;
-    owd=twd;
-  } else {
-    if (owd) free(owd);
-    owd=cwd;
-    cwd=strdup(r->argv[1]);
-  }
-  if (cwd && chdir(cwd))
-    ERROR("chdir() failed"); // warn
+  current=getcwd(0,0);
+  if (!current)
+    ERROR("getcwd() failed");
+  target=strcmp(r->argv[1],"-")==0 ? owd : r->argv[1];
+  if (!target)
+    ERROR("no previous working directory");
+  if (chdir(target))
+    ERROR("chdir() failed");
+  free(owd);
+  owd=current;
+  free(cwd);
+  cwd=getcwd(0,0);
+  if (!cwd)
+    ERROR("getcwd() failed");
+}
+
+BIDEFN(history) {
+  HIST_ENTRY **entries;
+
+  builtin_args(r,0);
+  entries=history_list();
+  if (entries)
+    for (int i=0; entries[i]; i++)
+      printf("%s\n",entries[i]->line);
 }
 
 static int builtin(BIARGS) {
@@ -67,6 +84,7 @@ static int builtin(BIARGS) {
     BIENTRY(exit),
     BIENTRY(pwd),
     BIENTRY(cd),
+    BIENTRY(history),
     {0,0}
   };
   int i;
